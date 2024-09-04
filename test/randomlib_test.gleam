@@ -1,11 +1,14 @@
 import birdie
 import gleam/bool
+import gleam/dict
 @target(erlang)
 import gleam/erlang/process
 import gleam/float
 import gleam/int
+import gleam/io
 import gleam/iterator
 import gleam/list.{Continue, Stop}
+import gleam/order.{Gt}
 import gleam/string
 import gleeunit
 import gleeunit/should
@@ -86,12 +89,16 @@ pub fn byte_iterator_test() {
 
   l1 |> should.equal(l2)
 
-  do_distinct_test(randomlib.new(), [], fn(rnd) {
-    #(
-      randomlib.byte_iterator(rnd) |> iterator.take(10) |> iterator.to_list,
-      rnd,
-    )
-  })
+  let it = randomlib.byte_iterator(randomlib.new())
+  case
+    it
+    |> iterator.take(10_000)
+    |> iterator.to_list
+    |> list.unique
+  {
+    [_] -> should.fail()
+    _ -> Nil
+  }
 
   let rnd = randomlib.with_seed(89_305_027)
   let l =
@@ -120,8 +127,43 @@ pub fn next_bytes_test() {
   |> birdie.snap(title: "bytes test")
 }
 
+pub fn choice_test() {
+  let l = [1, 2, 3, 4, 5, 6, 7]
+  let assert Ok(it) = randomlib.choice(randomlib.new(), l)
+  case
+    it
+    |> iterator.take(10_000)
+    |> iterator.to_list
+    |> list.unique
+  {
+    [_] -> should.fail()
+    _ -> Nil
+  }
+
+  randomlib.choice(randomlib.new(), []) |> should.be_error
+
+  // perform a check that the uniform distribution results in a less than 
+  // 1% deviation from the expected count of each choice
+  let runs = 100_000
+  let l = [1, 2, 3, 4, 5]
+  let assert Ok(it) = randomlib.choice(randomlib.new(), l)
+  it
+  |> iterator.take(runs)
+  |> iterator.to_list
+  |> list.group(fn(x) { x })
+  |> dict.map_values(fn(_k, v) { list.length(v) })
+  |> dict.each(fn(_k, count) {
+    int.compare(
+      int.absolute_value(count - runs / list.length(l)),
+      runs / { list.length(l) * 20 },
+    )
+    |> should.not_equal(Gt)
+  })
+}
+
 /// The tests in java ensure that the random functions don't just
-/// produce 10000 values all the same
+/// produce 10000 values all the same. Seems like a good idea to
+/// ensure distinct results
 fn do_distinct_test(
   rnd: Random,
   init_value: value,

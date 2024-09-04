@@ -2,6 +2,7 @@ import bigi.{type BigInt}
 import gleam/float
 import gleam/int
 import gleam/iterator.{type Iterator, Next}
+import gleam/list
 import gleam/order.{Eq, Gt, Lt}
 
 pub opaque type Random {
@@ -101,6 +102,25 @@ pub fn byte_iterator(rnd: Random) -> Iterator(Int) {
     let #(next, rnd) = next_byte(acc)
     Next(next, rnd)
   })
+}
+
+/// If non-empty choices list is provided, returns an iterator that performs a uniformly 
+/// distributed selection from the the items in the list
+/// If no choices are passed an Error(Nil) is returned
+pub fn choice(rnd: Random, choices: List(value)) -> Result(Iterator(value), Nil) {
+  case choices {
+    [] -> Error(Nil)
+    choices -> {
+      let length = list.length(choices)
+      Ok(
+        iterator.unfold(from: rnd, with: fn(acc) {
+          let assert Ok(#(next, rnd)) = next_int(acc, length)
+          let assert Ok(next) = list.first(list.split(choices, next).1)
+          Next(next, rnd)
+        }),
+      )
+    }
+  }
 }
 
 // Internal functions
