@@ -1,0 +1,36 @@
+---
+version: 1.2.1
+title: byte test
+file: ./test/randomlib_test.gleam
+test_name: next_byte_test
+---
+153
+96
+22
+50
+199
+186
+198
+48
+140
+76
+84
+175
+234
+247
+243
+47
+78
+218
+46
+240
+89
+126
+82
+217
+65
+148
+49
+116
+192
+77

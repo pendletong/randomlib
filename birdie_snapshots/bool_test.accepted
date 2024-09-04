@@ -1,0 +1,36 @@
+---
+version: 1.2.1
+title: bool test
+file: ./test/randomlib_test.gleam
+test_name: next_bool_test
+---
+False
+True
+True
+True
+False
+False
+False
+True
+False
+True
+True
+False
+False
+False
+False
+True
+True
+False
+True
+False
+True
+True
+True
+False
+True
+False
+True
+True
+False
+True

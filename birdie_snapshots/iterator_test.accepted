@@ -1,0 +1,16 @@
+---
+version: 1.2.1
+title: iterator test
+file: ./test/randomlib_test.gleam
+test_name: byte_iterator_test
+---
+77
+192
+116
+49
+148
+65
+217
+82
+126
+89
