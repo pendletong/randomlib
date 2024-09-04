@@ -1,7 +1,6 @@
 import bigi.{type BigInt}
 import gleam/float
 import gleam/int
-import gleam/io
 import gleam/iterator.{type Iterator, Next}
 import gleam/order.{Eq, Gt, Lt}
 
