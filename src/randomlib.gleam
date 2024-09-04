@@ -1,6 +1,7 @@
 import bigi.{type BigInt}
 import gleam/float
 import gleam/int
+import gleam/io
 import gleam/iterator.{type Iterator, Next}
 import gleam/order.{Eq, Gt, Lt}
 
@@ -15,10 +16,6 @@ const multiplier = 25_214_903_917
 const bitmask_48 = 281_474_976_710_655
 
 const int_limit = 2_147_483_647
-
-const float_precision = 53
-
-const float_unit = 1.0e-53
 
 /// Creates a new random seed with distinctness set using the
 /// current time, nominally in nanoseconds.
@@ -65,8 +62,9 @@ pub fn next_bytes(rnd: Random, n: Int) -> #(List(Int), Random) {
 /// Returns a tuple containing a uniformly distributed float 
 /// between 0.0 (inclusive) and 1.0 (exclusive) and the updated random seed
 pub fn next_float(rnd: Random) -> #(Float, Random) {
-  let #(val, rnd) = get_next_bits(rnd, float_precision)
-  #(int.to_float(val) *. float_unit, rnd)
+  let #(val, rnd) = get_next_bits(rnd, 53)
+  let assert Ok(unit) = float.power(2.0, -53.0)
+  #(int.to_float(val) *. unit, rnd)
 }
 
 /// Returns a result containing either a tuple containing a uniformly distributed
