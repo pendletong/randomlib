@@ -2,13 +2,13 @@ import bigi.{type BigInt}
 import gleam/float
 import gleam/int
 import gleam/iterator.{type Iterator, Next}
-import gleam/order.{Eq, Gt}
+import gleam/order.{Eq, Gt, Lt}
 
 pub type Random {
   Random(seed: Int)
 }
 
-const unique_seed = 8_682_522_807_148_012
+const unique_seed = 3_447_679_086_515_839_964
 
 const multiplier = 25_214_903_917
 
@@ -20,48 +20,58 @@ const float_precision = 53
 
 const float_unit = 1.0e-53
 
+/// Creates a new random seed with distinctness set using the
+/// current time, nominally in nanoseconds.
+/// Please note that the actual timings will be microseconds
+/// for erland and milliseconds for javascript, so any new random
+/// seeds generated in that same time scale will be the same
 pub fn new() {
   Random(initial_scramble(init_seed()))
 }
 
+/// Creates a new random seed based on the specified seed provided
 pub fn with_seed(seed: Int) {
   Random(initial_scramble(seed))
 }
 
-/// Picks a random seed based on a static seed and the current time in nanosecond
-/// the long number is chosen from the initial startup value of Java random
-/// using the corrected value from L'Ecuyer, "Tables of Linear Congruential Generators of
-/// Different Sizes and Good Lattice Structure", 1999
-fn init_seed() -> Int {
-  int.bitwise_exclusive_or(3_447_679_086_515_839_964, ffi_now() * 1000)
-}
-
-fn initial_scramble(seed: Int) -> Int {
-  int.bitwise_and(int.bitwise_exclusive_or(seed, multiplier), bitmask_48)
-}
-
+/// Returns a tuple containing a BigInt of size n bits and the
+/// updated random seed
+/// Note that this hasn't been fully tested to generate
+/// uniformly distributed values
 pub fn next(rnd: Random, bits: Int) -> #(BigInt, Random) {
   get_next(bits, #(bigi.zero(), rnd))
 }
 
+/// Returns a tuple containing a uniformly distributed Bool and 
+/// the updated random seed
 pub fn next_bool(rnd: Random) -> #(Bool, Random) {
   let #(val, rnd) = get_next_bits(rnd, 1)
   #(val == 0, rnd)
 }
 
+/// Returns a tuple containing a byte (0-255) in Int form and the
+/// updated random seed
 pub fn next_byte(rnd: Random) -> #(Int, Random) {
   get_next_bits(rnd, 8)
 }
 
+/// Returns a tuple containing a list of n bytes in Int form and
+/// the updated random seed
+/// Passing n <= 0 will return an empty list
 pub fn next_bytes(rnd: Random, n: Int) -> #(List(Int), Random) {
   get_next_bytes(#([], rnd), n)
 }
 
+/// Returns a tuple containing a uniformly distributed float 
+/// between 0.0 (inclusive) and 1.0 (exclusive) and the updated random seed
 pub fn next_float(rnd: Random) -> #(Float, Random) {
   let #(val, rnd) = get_next_bits(rnd, float_precision)
   #(int.to_float(val) *. float_unit, rnd)
 }
 
+/// Returns a result containing either a tuple containing a uniformly distributed
+/// Int (where int is 32 bits signed) and the updated random seed or an error
+/// containing the random seed (currently not updated)
 pub fn next_int(rnd: Random, limit: Int) -> Result(#(Int, Random), Random) {
   case limit {
     l if l <= 0 || l >= int_limit -> Error(rnd)
@@ -86,6 +96,9 @@ pub fn next_int(rnd: Random, limit: Int) -> Result(#(Int, Random), Random) {
   }
 }
 
+/// Returns an iterated that generates byte in Int form when iterated
+/// Note that the random seed is internally updated but there is no ability
+/// to extract the updated seed
 pub fn byte_iterator(rnd: Random) -> Iterator(Int) {
   iterator.unfold(from: rnd, with: fn(acc) {
     let #(next, rnd) = next_byte(acc)
@@ -94,6 +107,18 @@ pub fn byte_iterator(rnd: Random) -> Iterator(Int) {
 }
 
 // Internal functions
+
+/// Picks a random seed based on a static seed and the current time in nanosecond
+/// the long number is chosen from the initial startup value of Java random
+/// using the corrected value from L'Ecuyer, "Tables of Linear Congruential Generators of
+/// Different Sizes and Good Lattice Structure", 1999
+fn init_seed() -> Int {
+  int.bitwise_exclusive_or(unique_seed, ffi_now() * 1000)
+}
+
+fn initial_scramble(seed: Int) -> Int {
+  int.bitwise_and(int.bitwise_exclusive_or(seed, multiplier), bitmask_48)
+}
 
 fn get_next_bits(rnd: Random, bits: Int) -> #(Int, Random) {
   let assert Ok(next_seed) =
@@ -112,9 +137,9 @@ fn get_next_bits(rnd: Random, bits: Int) -> #(Int, Random) {
 }
 
 fn get_next_bytes(acc: #(List(Int), Random), n: Int) -> #(List(Int), Random) {
-  case n {
-    0 -> acc
-    n -> {
+  case int.compare(n, 0) {
+    Eq | Lt -> acc
+    Gt -> {
       let #(l, rnd) = acc
       let #(next, rnd) = get_next_bits(rnd, 8)
       get_next_bytes(#([next, ..l], rnd), n - 1)
