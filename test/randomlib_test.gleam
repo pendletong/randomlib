@@ -5,7 +5,6 @@ import gleam/dict
 import gleam/erlang/process
 import gleam/float
 import gleam/int
-import gleam/io
 import gleam/iterator
 import gleam/list.{Continue, Stop}
 import gleam/order.{Gt}
