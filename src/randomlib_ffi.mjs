@@ -10,6 +10,6 @@ export function shift_left(bi, n) {
   return bi << BigInt(n)
 }
 
-export function shift_left(bi, n) {
+export function shift_right(bi, n) {
   return bi >> BigInt(n)
 }
