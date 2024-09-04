@@ -4,7 +4,7 @@ import gleam/int
 import gleam/iterator.{type Iterator, Next}
 import gleam/order.{Eq, Gt, Lt}
 
-pub type Random {
+pub opaque type Random {
   Random(seed: Int)
 }
 
