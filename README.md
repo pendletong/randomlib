@@ -5,7 +5,7 @@
 
 A random number library for Gleam
 
-This package provides various random generators for different types
+This package provides various function to generate random output for different types
 The random generation should be the same between Erlang and Javascript targets
 
 ```sh
