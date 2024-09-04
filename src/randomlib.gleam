@@ -2,6 +2,7 @@ import bigi.{type BigInt}
 import gleam/float
 import gleam/int
 import gleam/iterator.{type Iterator, Next}
+import gleam/order.{Eq, Gt}
 
 pub type Random {
   Random(seed: Int)
@@ -12,6 +13,8 @@ const unique_seed = 8_682_522_807_148_012
 const multiplier = 25_214_903_917
 
 const bitmask_48 = 281_474_976_710_655
+
+const int_limit = 2_147_483_647
 
 const float_precision = 53
 
@@ -25,14 +28,12 @@ pub fn with_seed(seed: Int) {
   Random(initial_scramble(seed))
 }
 
+/// Picks a random seed based on a static seed and the current time in nanosecond
+/// the long number is chosen from the initial startup value of Java random
+/// using the corrected value from L'Ecuyer, "Tables of Linear Congruential Generators of
+/// Different Sizes and Good Lattice Structure", 1999
 fn init_seed() -> Int {
-  let assert Ok(cong_gen) = bigi.from_string("1181783497276652981")
-  let assert Ok(init_seed) =
-    bigi.to_int(ffi_to_n_bits(
-      bigi.multiply(bigi.from_int(unique_seed), cong_gen),
-      48,
-    ))
-  int.bitwise_exclusive_or(init_seed, ffi_now())
+  int.bitwise_exclusive_or(3_447_679_086_515_839_964, ffi_now() * 1000)
 }
 
 fn initial_scramble(seed: Int) -> Int {
@@ -59,6 +60,30 @@ pub fn next_bytes(rnd: Random, n: Int) -> #(List(Int), Random) {
 pub fn next_float(rnd: Random) -> #(Float, Random) {
   let #(val, rnd) = get_next_bits(rnd, float_precision)
   #(int.to_float(val) *. float_unit, rnd)
+}
+
+pub fn next_int(rnd: Random, limit: Int) -> Result(#(Int, Random), Random) {
+  case limit {
+    l if l <= 0 || l >= int_limit -> Error(rnd)
+    limit -> {
+      let #(next, rnd) = get_next_bits(rnd, 31)
+
+      case int.compare(int.bitwise_and(limit - 1, limit), 0) {
+        Eq -> {
+          let assert Ok(next) =
+            bigi.to_int(ffi_shift_right(
+              bigi.multiply(bigi.from_int(next), bigi.from_int(limit)),
+              31,
+            ))
+          Ok(#(next, rnd))
+        }
+        _ -> {
+          let #(next, rnd) = get_unique_int(#(next, rnd), limit)
+          Ok(#(next, rnd))
+        }
+      }
+    }
+  }
 }
 
 pub fn byte_iterator(rnd: Random) -> Iterator(Int) {
@@ -119,6 +144,16 @@ fn get_next(bits: Int, res: #(BigInt, Random)) -> #(BigInt, Random) {
   }
 }
 
+fn get_unique_int(acc: #(Int, Random), limit: Int) -> #(Int, Random) {
+  let #(r, rnd) = acc
+  let u = r
+  let assert Ok(r) = int.modulo(u, limit)
+  case int.compare(u - r + limit - 1, int_limit) {
+    Gt -> get_unique_int(get_next_bits(rnd, 31), limit)
+    _ -> #(r, rnd)
+  }
+}
+
 @external(erlang, "randomlib_ffi", "now")
 @external(javascript, "./randomlib_ffi.mjs", "now")
 fn ffi_now() -> Int
@@ -135,6 +170,13 @@ fn ffi_shift_left(bi: BigInt, n: Int) -> BigInt {
   let assert Ok(i) = bigi.to_int(bi)
 
   bigi.from_int(int.bitwise_shift_left(i, n))
+}
+
+@external(javascript, "./randomlib_ffi.mjs", "shift_right")
+fn ffi_shift_right(bi: BigInt, n: Int) -> BigInt {
+  let assert Ok(i) = bigi.to_int(bi)
+
+  bigi.from_int(int.bitwise_shift_right(i, n))
 }
 // bigi fns needed
 // from_int

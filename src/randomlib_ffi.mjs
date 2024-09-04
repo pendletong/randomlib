@@ -9,3 +9,7 @@ export function to_n_bits(bi, n) {
 export function shift_left(bi, n) {
   return bi << BigInt(n)
 }
+
+export function shift_left(bi, n) {
+  return bi >> BigInt(n)
+}
