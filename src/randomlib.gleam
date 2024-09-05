@@ -68,7 +68,7 @@ pub fn next_float(rnd: Random) -> #(Float, Random) {
 }
 
 /// Returns a result containing either a tuple containing a uniformly distributed
-/// Int (where int is 32 bits signed) and the updated random seed or an error
+/// Int (where int is 31 bits unsigned) and the updated random seed or an error
 /// containing the random seed (currently not updated)
 pub fn next_int(rnd: Random, limit: Int) -> Result(#(Int, Random), Random) {
   case limit {
