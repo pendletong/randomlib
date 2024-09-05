@@ -104,6 +104,16 @@ pub fn byte_iterator(rnd: Random) -> Iterator(Int) {
   })
 }
 
+/// Returns an iterated that generates uniformly distributed Floats when iterated
+/// Note that the random seed is internally updated but there is no ability
+/// to extract the updated seed
+pub fn float_iterator(rnd: Random) -> Iterator(Float) {
+  iterator.unfold(from: rnd, with: fn(acc) {
+    let #(next, rnd) = next_float(acc)
+    Next(next, rnd)
+  })
+}
+
 /// If non-empty choices list is provided, returns an iterator that performs a uniformly 
 /// distributed selection from the the items in the list
 /// If no choices are passed an Error(Nil) is returned

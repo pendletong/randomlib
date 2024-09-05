@@ -93,7 +93,7 @@ pub fn byte_iterator_test() {
     it
     |> iterator.take(10_000)
     |> iterator.to_list
-    |> list.unique
+    |> unique
   {
     [_] -> should.fail()
     _ -> Nil
@@ -109,6 +109,55 @@ pub fn byte_iterator_test() {
 
   output
   |> birdie.snap(title: "iterator test")
+}
+
+pub fn float_iterator_test() {
+  // check that an iterator starting at the same seed produces the same
+  // list of bytes
+  let rnd = randomlib.new()
+  let l1 =
+    randomlib.float_iterator(rnd) |> iterator.take(10) |> iterator.to_list
+  let l2 =
+    randomlib.float_iterator(rnd) |> iterator.take(10) |> iterator.to_list
+
+  l1 |> should.equal(l2)
+
+  let it = randomlib.float_iterator(randomlib.new())
+  case
+    it
+    |> iterator.take(10_000)
+    |> iterator.to_list
+    |> unique
+  {
+    [_] -> should.fail()
+    _ -> Nil
+  }
+
+  let rnd = randomlib.with_seed(89_305_027)
+  let l =
+    randomlib.float_iterator(rnd)
+    |> iterator.take(10)
+    |> iterator.to_list
+    |> list.map(float.to_string)
+  let output = string.join(l, "\n")
+
+  output
+  |> birdie.snap(title: "float iterator test")
+}
+
+// Added to allow js testing of float iterator until 
+// this fix arrives in gleam_stdlib
+fn unique(list: List(a)) -> List(a) {
+  let #(result_rev, _) =
+    list
+    |> list.fold(#([], dict.new()), fn(acc, x) {
+      let #(result_rev, seen) = acc
+      case dict.has_key(seen, x) {
+        False -> #([x, ..result_rev], dict.insert(seen, x, Nil))
+        True -> #(result_rev, seen)
+      }
+    })
+  result_rev |> list.reverse
 }
 
 pub fn next_bytes_test() {
