@@ -209,6 +209,48 @@ pub fn choice_test() {
   })
 }
 
+pub fn simple_distribution_test() {
+  // Tests the next_int for any extreme distribution issues
+  // Tests n random numbers between 0 and m (exc)
+  // These are then put into m/1000 buckets and
+  // checked to see that at least 1 random number
+  // in each bucket was picked
+  // Need to ensure that n is large enough
+  // Also possibly would be useful to produce some
+  // sort of standard deviation test of the bucket counts
+  // to ensure we are not seeing for example 90% in the
+  // 0-1000 bucket and the remaining 10% in the other buckets
+  // I found n=10000 to be the point where the list of
+  // empty buckets remained empty so n=100000 should
+  // definitely very, very rarely produce an empty bucket
+  let rnd = randomlib.new()
+  let n = 100_000
+  let m = 1_000_000
+  let #(rnd, l) =
+    list.repeat(0, n)
+    |> list.map_fold(rnd, fn(rnd, v) {
+      let assert Ok(#(v, rnd)) = randomlib.next_int(rnd, m)
+      #(rnd, v)
+    })
+  let res =
+    l
+    |> list.group(fn(v) { v / 1000 })
+    |> dict.to_list
+    |> list.sort(fn(a, b) { int.compare(a.0, b.0) })
+    |> list.map(fn(v) { #(v.0, list.length(v.1)) })
+    |> dict.from_list
+
+  iterator.range(0, { m - 1 } / 1000)
+  |> iterator.fold(dict.new(), fn(d, range) {
+    case dict.has_key(res, range) {
+      True -> d
+      False -> dict.insert(d, range, "X")
+    }
+  })
+  |> dict.to_list
+  |> should.equal([])
+}
+
 /// The tests in java ensure that the random functions don't just
 /// produce 10000 values all the same. Seems like a good idea to
 /// ensure distinct results
