@@ -79,7 +79,7 @@ pub fn next_int(rnd: Random, limit: Int) -> Result(#(Int, Random), Random) {
       case int.compare(int.bitwise_and(limit - 1, limit), 0) {
         Eq -> {
           let assert Ok(next) =
-            bigi.to_int(ffi_shift_right(
+            bigi.to_int(bigi.bitwise_shift_right(
               bigi.multiply(bigi.from_int(next), bigi.from_int(limit)),
               31,
             ))
@@ -180,7 +180,7 @@ fn get_next(bits: Int, res: #(BigInt, Random)) -> #(BigInt, Random) {
     True -> {
       let #(next, rnd) = get_next_bits(rnd, 48)
       get_next(bits - 48, #(
-        bigi.add(ffi_shift_left(bi, 48), bigi.from_int(next)),
+        bigi.add(bigi.bitwise_shift_left(bi, 48), bigi.from_int(next)),
         rnd,
       ))
     }
@@ -189,7 +189,7 @@ fn get_next(bits: Int, res: #(BigInt, Random)) -> #(BigInt, Random) {
         0 -> res
         bits -> {
           let #(next, rnd) = get_next_bits(rnd, bits)
-          #(bigi.add(ffi_shift_left(bi, 48), bigi.from_int(next)), rnd)
+          #(bigi.add(bigi.bitwise_shift_left(bi, 48), bigi.from_int(next)), rnd)
         }
       }
     }
@@ -216,20 +216,6 @@ fn ffi_to_n_bits(bi: BigInt, n: Int) -> BigInt {
   let assert Ok(pow) = int.power(2, int.to_float(n))
   bigi.from_int(int.bitwise_and(i, float.truncate(pow) - 1))
 }
-
-@external(javascript, "./randomlib_ffi.mjs", "shift_left")
-fn ffi_shift_left(bi: BigInt, n: Int) -> BigInt {
-  let assert Ok(i) = bigi.to_int(bi)
-
-  bigi.from_int(int.bitwise_shift_left(i, n))
-}
-
-@external(javascript, "./randomlib_ffi.mjs", "shift_right")
-fn ffi_shift_right(bi: BigInt, n: Int) -> BigInt {
-  let assert Ok(i) = bigi.to_int(bi)
-
-  bigi.from_int(int.bitwise_shift_right(i, n))
-}
 // bigi fns needed
 // from_int
 // to_int
@@ -237,3 +223,5 @@ fn ffi_shift_right(bi: BigInt, n: Int) -> BigInt {
 // multiply
 // from_string
 // zero
+// bitwise_shift_left
+// bitwise_shift_right

@@ -3,7 +3,7 @@
 
 packages = [
   { name = "argv", version = "1.0.2", build_tools = ["gleam"], requirements = [], otp_app = "argv", source = "hex", outer_checksum = "BA1FF0929525DEBA1CE67256E5ADF77A7CDDFE729E3E3F57A5BDCAA031DED09D" },
-  { name = "bigi", version = "3.0.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "bigi", source = "hex", outer_checksum = "FFDFC542A5146C535AE09AB9A642D652AD8B018509CDA70E1D09741EDB64FBF7" },
+  { name = "bigi", version = "3.2.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "bigi", source = "hex", outer_checksum = "FB1263FCF052C8A8331965C91688D91D79C158ED01549B9E6F1FD866DA90EAA4" },
   { name = "birdie", version = "1.2.1", build_tools = ["gleam"], requirements = ["argv", "edit_distance", "filepath", "glance", "gleam_community_ansi", "gleam_erlang", "gleam_stdlib", "justin", "rank", "simplifile", "trie_again"], otp_app = "birdie", source = "hex", outer_checksum = "915C364E56FEF255C77E8F166F66C3B5F2B17040806E6F50D3F785EFF913D336" },
   { name = "conversation", version = "1.4.3", build_tools = ["gleam"], requirements = ["gleam_http", "gleam_javascript", "gleam_stdlib"], otp_app = "conversation", source = "hex", outer_checksum = "908B46F60444442785A495197D482558AD8B849C3714A38FAA1940358CC8CCCD" },
   { name = "edit_distance", version = "2.0.1", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "edit_distance", source = "hex", outer_checksum = "A1E485C69A70210223E46E63985FA1008B8B2DDA9848B7897469171B29020C05" },
@@ -27,7 +27,7 @@ packages = [
 ]
 
 [requirements]
-bigi = { version = ">= 3.0.0 and < 4.0.0" }
+bigi = { version = ">= 3.2.0 and < 4.0.0" }
 birdie = { version = ">= 1.2.1 and < 2.0.0" }
 gleam_erlang = { version = ">= 0.26.0 and < 1.0.0" }
 gleam_stdlib = { version = ">= 0.34.0 and < 2.0.0" }
