@@ -5,10 +5,10 @@ import gleam/dict
 import gleam/erlang/process
 import gleam/float
 import gleam/int
-import gleam/iterator
 import gleam/list.{Continue, Stop}
 import gleam/order.{Gt}
 import gleam/string
+import gleam/yielder
 import gleeunit
 import gleeunit/should
 @target(javascript)
@@ -83,16 +83,16 @@ pub fn byte_iterator_test() {
   // check that an iterator starting at the same seed produces the same
   // list of bytes
   let rnd = randomlib.new()
-  let l1 = randomlib.byte_iterator(rnd) |> iterator.take(10) |> iterator.to_list
-  let l2 = randomlib.byte_iterator(rnd) |> iterator.take(10) |> iterator.to_list
+  let l1 = randomlib.byte_iterator(rnd) |> yielder.take(10) |> yielder.to_list
+  let l2 = randomlib.byte_iterator(rnd) |> yielder.take(10) |> yielder.to_list
 
   l1 |> should.equal(l2)
 
   let it = randomlib.byte_iterator(randomlib.new())
   case
     it
-    |> iterator.take(10_000)
-    |> iterator.to_list
+    |> yielder.take(10_000)
+    |> yielder.to_list
     |> unique
   {
     [_] -> should.fail()
@@ -102,8 +102,8 @@ pub fn byte_iterator_test() {
   let rnd = randomlib.with_seed(89_305_027)
   let l =
     randomlib.byte_iterator(rnd)
-    |> iterator.take(10)
-    |> iterator.to_list
+    |> yielder.take(10)
+    |> yielder.to_list
     |> list.map(int.to_string)
   let output = string.join(l, "\n")
 
@@ -115,18 +115,16 @@ pub fn float_iterator_test() {
   // check that an iterator starting at the same seed produces the same
   // list of bytes
   let rnd = randomlib.new()
-  let l1 =
-    randomlib.float_iterator(rnd) |> iterator.take(10) |> iterator.to_list
-  let l2 =
-    randomlib.float_iterator(rnd) |> iterator.take(10) |> iterator.to_list
+  let l1 = randomlib.float_iterator(rnd) |> yielder.take(10) |> yielder.to_list
+  let l2 = randomlib.float_iterator(rnd) |> yielder.take(10) |> yielder.to_list
 
   l1 |> should.equal(l2)
 
   let it = randomlib.float_iterator(randomlib.new())
   case
     it
-    |> iterator.take(10_000)
-    |> iterator.to_list
+    |> yielder.take(10_000)
+    |> yielder.to_list
     |> unique
   {
     [_] -> should.fail()
@@ -136,8 +134,8 @@ pub fn float_iterator_test() {
   let rnd = randomlib.with_seed(89_305_027)
   let l =
     randomlib.float_iterator(rnd)
-    |> iterator.take(10)
-    |> iterator.to_list
+    |> yielder.take(10)
+    |> yielder.to_list
     |> list.map(float.to_string)
   let output = string.join(l, "\n")
 
@@ -180,8 +178,8 @@ pub fn choice_test() {
   let assert Ok(it) = randomlib.choice(randomlib.new(), l)
   case
     it
-    |> iterator.take(10_000)
-    |> iterator.to_list
+    |> yielder.take(10_000)
+    |> yielder.to_list
     |> list.unique
   {
     [_] -> should.fail()
@@ -196,8 +194,8 @@ pub fn choice_test() {
   let l = [1, 2, 3, 4, 5]
   let assert Ok(it) = randomlib.choice(randomlib.new(), l)
   it
-  |> iterator.take(runs)
-  |> iterator.to_list
+  |> yielder.take(runs)
+  |> yielder.to_list
   |> list.group(fn(x) { x })
   |> dict.map_values(fn(_k, v) { list.length(v) })
   |> dict.each(fn(_k, count) {
@@ -240,8 +238,8 @@ pub fn simple_distribution_test() {
     |> list.map(fn(v) { #(v.0, list.length(v.1)) })
     |> dict.from_list
 
-  iterator.range(0, { m - 1 } / 1000)
-  |> iterator.fold(dict.new(), fn(d, range) {
+  yielder.range(0, { m - 1 } / 1000)
+  |> yielder.fold(dict.new(), fn(d, range) {
     case dict.has_key(res, range) {
       True -> d
       False -> dict.insert(d, range, "X")
@@ -259,10 +257,10 @@ fn do_distinct_test(
   init_value: value,
   get_rnd: fn(Random) -> #(value, Random),
 ) -> Nil {
-  let i = iterator.range(1, 10_000)
+  let i = yielder.range(1, 10_000)
 
   let #(n, _, _) =
-    iterator.fold_until(i, #(0, init_value, rnd), fn(acc, v) {
+    yielder.fold_until(i, #(0, init_value, rnd), fn(acc, v) {
       let #(_, current, rnd) = acc
       let #(next, rnd) = get_rnd(rnd)
       case next == current {

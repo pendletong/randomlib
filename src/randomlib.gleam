@@ -1,9 +1,9 @@
 import bigi.{type BigInt}
 import gleam/float
 import gleam/int
-import gleam/iterator.{type Iterator, Next}
 import gleam/list
 import gleam/order.{Eq, Gt, Lt}
+import gleam/yielder.{type Yielder, Next}
 
 pub opaque type Random {
   Random(seed: Int)
@@ -97,8 +97,8 @@ pub fn next_int(rnd: Random, limit: Int) -> Result(#(Int, Random), Random) {
 /// Returns an iterated that generates byte in Int form when iterated
 /// Note that the random seed is internally updated but there is no ability
 /// to extract the updated seed
-pub fn byte_iterator(rnd: Random) -> Iterator(Int) {
-  iterator.unfold(from: rnd, with: fn(acc) {
+pub fn byte_iterator(rnd: Random) -> Yielder(Int) {
+  yielder.unfold(from: rnd, with: fn(acc) {
     let #(next, rnd) = next_byte(acc)
     Next(next, rnd)
   })
@@ -107,8 +107,8 @@ pub fn byte_iterator(rnd: Random) -> Iterator(Int) {
 /// Returns an iterated that generates uniformly distributed Floats when iterated
 /// Note that the random seed is internally updated but there is no ability
 /// to extract the updated seed
-pub fn float_iterator(rnd: Random) -> Iterator(Float) {
-  iterator.unfold(from: rnd, with: fn(acc) {
+pub fn float_iterator(rnd: Random) -> Yielder(Float) {
+  yielder.unfold(from: rnd, with: fn(acc) {
     let #(next, rnd) = next_float(acc)
     Next(next, rnd)
   })
@@ -117,13 +117,13 @@ pub fn float_iterator(rnd: Random) -> Iterator(Float) {
 /// If non-empty choices list is provided, returns an iterator that performs a uniformly 
 /// distributed selection from the the items in the list
 /// If no choices are passed an Error(Nil) is returned
-pub fn choice(rnd: Random, choices: List(value)) -> Result(Iterator(value), Nil) {
+pub fn choice(rnd: Random, choices: List(value)) -> Result(Yielder(value), Nil) {
   case choices {
     [] -> Error(Nil)
     choices -> {
       let length = list.length(choices)
       Ok(
-        iterator.unfold(from: rnd, with: fn(acc) {
+        yielder.unfold(from: rnd, with: fn(acc) {
           let assert Ok(#(next, rnd)) = next_int(acc, length)
           let assert Ok(next) = list.first(list.split(choices, next).1)
           Next(next, rnd)
